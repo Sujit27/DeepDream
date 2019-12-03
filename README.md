@@ -40,7 +40,7 @@ Sample outputs:
 __To train the discriminator, first import the dataset(~14GB) from the following remote system into your local disk 
  and unzip. This should create an imageNet directory at /var/tmp on the local system__
  
-```$ scp user_name@faui04m.informatik.uni.erlangen.de:/var/temp/ /var/temp/```
+```$ scp user_name@faui04m.informatik.uni.erlangen.de:/var/temp/imageData.zip /var/temp/```
 
 This imageNet directory contains 37856 .png dream images created by lib/dreamAllLabels.py, 40100 Image Net validation set
 images available for download[here](https://academictorrents.com/collection/imagenet-2012) and 2 .csv files listing the image names.
