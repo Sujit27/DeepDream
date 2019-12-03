@@ -13,7 +13,7 @@ import scipy.misc
 from scipy import ndimage
 import math
 import os
-
+import random
 
 # Created by Sujit Sahoo, 26 Sept 2019
 # sujit.sahoo@fau.de
@@ -135,10 +135,12 @@ class DeepDream():
         self.net.to(self.device)
         print("Network Loaded")
 
-    def __call__(self,im=None,label=0,nItr=500,lr=0.1):
+    def __call__(self,im=None,label=0,nItr=500,lr=0.1,randomSeed=0):
         """Does activation maximization on a specific label for specified iterations,
            acts like a functor, and returns an image tensor
         """
+        random.seed(randomSeed)
+
         if im is None:
             im = self.createInputImage()
             im = self.prepInputImage(im)
