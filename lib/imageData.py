@@ -16,27 +16,26 @@ class ImageData(Dataset):
     example:
     dataset = ImageData('/../images','dreamImageNames.csv','realImageNames.csv',preprocess)
     '''
-    def __init__(self,data_path,dreamImagescsv,realImagescsv,transform=None):
+    def __init__(self,data_path,realImagescsv,dreamImagescsv,transform=None):
 
         self.data_path = data_path
         
         # read file names from csv
-        self.dreamImageIDs = pd.read_csv(dreamImagescsv,header=None)
         self.realImageIDs =  pd.read_csv(realImagescsv,header=None)
-
+        labelReal = np.ones(len(self.realImageIDs))
         self.transform = transform
         
-        #dream_hot_encoded = np.array([1,0])
-        #real_hot_encoded = np.array([0,1])
-        # create labels, 0 for dream images and 1 for real images
-        #labelDream = np.array([dream_hot_encoded]*len(self.dreamImageIDs))
-        #labelReal = np.array([real_hot_encoded]*len(self.realImageIDs))
+        if dreamImagescsv is not None:
+            self.dreamImageIDs = pd.read_csv(dreamImagescsv,header=None)
+            labelDream = np.zeros(len(self.dreamImageIDs))
 
-        labelDream = np.zeros(len(self.dreamImageIDs))
-        labelReal = np.ones(len(self.realImageIDs))
+            self.imageIDs = self.dreamImageIDs[0].tolist() + self.realImageIDs[0].tolist()
+            self.labels = np.concatenate([labelDream,labelReal])
 
-        self.imageIDs = self.dreamImageIDs[0].tolist() + self.realImageIDs[0].tolist()
-        self.labels = np.concatenate([labelDream,labelReal])
+        else:
+            self.imageIDs = self.realImageIDs[0].tolist()
+            self.labels = labelReal
+
 
 
     def __len__(self):
