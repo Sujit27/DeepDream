@@ -113,6 +113,12 @@ class DeepDream():
         self.net = net
         self.gaussian_filter = None
         self.ouputImage = None
+        # list variables used in randomDream method
+        self.nItrs = [300,400,500,600]
+        self.lrs = [0.08,0.1,0.12,0.14]
+        self.sigmas = [0.4,0.42,0.44,0.46,0.48,0.5]
+        self.labels = [i for i in range(1000)]
+        # set methods
         self.setDevice()
         self.setNetwork()
         self.setGaussianFilter()
@@ -135,11 +141,10 @@ class DeepDream():
         self.net.to(self.device)
         print("Network Loaded")
 
-    def __call__(self,im=None,label=0,nItr=500,lr=0.1,randomSeed=0):
+    def __call__(self,im=None,label=0,nItr=500,lr=0.1):
         """Does activation maximization on a specific label for specified iterations,
            acts like a functor, and returns an image tensor
         """
-        random.seed(randomSeed)
 
         if im is None:
             im = self.createInputImage()
@@ -168,6 +173,45 @@ class DeepDream():
             im.grad.data.zero_()
 
         return im
+
+    def randomDream(self,im=None,randomSeed=0):
+        """Does activation maximization on a random label for randomly chosen learning rate,number of iterations and gaussian filter size, and returns an image tensor
+        """
+        random.seed(randomSeed)
+        nItr = random.choice(self.nItrs)
+        lr = random.choice(self.lrs)
+        sigma = random.choice(self.sigmas)
+        label = random.choice(self.labels)
+        self.setGaussianFilter(sigma=sigma)
+
+        if im is None:
+            im = self.createInputImage()
+            im = self.prepInputImage(im)
+            im = im.to(self.device)
+
+            im = Variable(im.unsqueeze(0),requires_grad=True)
+
+            # offset by the min value to 0 (shift data to positive)
+            min_val = torch.min(im.data)
+            im.data = im.data - min_val
+
+        print("Dreaming...")
+
+        for i in range(nItr):
+
+            optimizer = torch.optim.SGD([im],lr)
+            out = self.net(im)
+            loss = -out[0,label]
+
+            loss.backward()
+            optimizer.step()
+
+            im.data = self.gaussian_filter(im.data)
+
+            im.grad.data.zero_()
+
+        return im
+
 
     def createInputImage(self):
         zeroImage_np = np.zeros((224,224,3))
