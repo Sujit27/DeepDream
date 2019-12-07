@@ -1,7 +1,8 @@
 import sys
 #sys.path.append('../')
-#sys.path.append('../lib/')
-from trainDiscriminator import *
+sys.path.append('../lib/')
+#from trainDiscriminator import *
+from helperFunctions import *
 
 # created by Sujit Sahoo, 30.11.2019
 # sujit.sahoo@fau.de
