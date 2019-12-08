@@ -184,31 +184,7 @@ class DeepDream():
         label = random.choice(self.labels)
         self.setGaussianFilter(sigma=sigma)
 
-        if im is None:
-            im = self.createInputImage()
-            im = self.prepInputImage(im)
-            im = im.to(self.device)
-
-            im = Variable(im.unsqueeze(0),requires_grad=True)
-
-            # offset by the min value to 0 (shift data to positive)
-            min_val = torch.min(im.data)
-            im.data = im.data - min_val
-
-        print("Dreaming...")
-
-        for i in range(nItr):
-
-            optimizer = torch.optim.SGD([im],lr)
-            out = self.net(im)
-            loss = -out[0,label]
-
-            loss.backward()
-            optimizer.step()
-
-            im.data = self.gaussian_filter(im.data)
-
-            im.grad.data.zero_()
+        im = self.__call__(im,label=label,nItr=nItr,lr=lr)
 
         return im
 

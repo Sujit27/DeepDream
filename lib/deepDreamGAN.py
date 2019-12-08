@@ -30,7 +30,6 @@ class DeepDreamGAN(DeepDream):
         self.discrimNet.to(self.device)
         print("Discriminator Loaded")
 
-        print("Discriminator being trained")
         self.trainDiscrimNet()
 
     def trainDiscrimNet(self,steps=50):
@@ -93,7 +92,44 @@ class DeepDreamGAN(DeepDream):
         from the network(parameters nItr1,lr1) and discriminator(parameters nItr2,lr2)
         ,iterating through it nLoop times
         '''
-        pass
+        if im is None:
+            im = self.createInputImage()
+            im = self.prepInputImage(im)
+            im = im.to(self.device)
+
+            im = Variable(im.unsqueeze(0),requires_grad=True)
+
+            # offset by the min value to 0 (shift data to positive)
+            min_val = torch.min(im.data)
+            im.data = im.data - min_val
+
+        print("Dreaming...")
+
+        for _ in range(nLoop):
+            
+            for _ in range(nItr1):
+                optimizer = torch.optim.SGD([im],lr1)
+                out = self.net(im)
+                loss = -out[0,label]
+
+                loss.backward()
+                optimizer.step()
+
+                im.data = self.gaussian_filter(im.data)
+
+                im.grad.data.zero_()
+
+
+            for _ in range(nItr2):
+
+                optimizer = torch.optim.SGD([im],lr2)
+                out = self.discrimNet(im)
+                loss = -out  #criterion(out,desiredLabel)
+                
+                loss.backward()
+                optimizer.step()
+                
+                im.grad.data.zero_()
 
         return im
 
@@ -111,6 +147,6 @@ class DeepDreamGAN(DeepDream):
         label = random.choice(self.labels)
         self.setGaussianFilter(sigma=sigma)
 
-        pass
+        im = self.__call__(im,label=label,nLoop=nLoop,nItr1=nItr1,nItr2=nItr2,lr1=lr1,lr2=lr2)
 
         return im
