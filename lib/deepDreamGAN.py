@@ -76,10 +76,9 @@ class DeepDreamGAN(DeepDream):
                     loss.backward()
                     optimizer.step()
                    
-                    if step % 10 == 0:
-                        logStatus('Training',self.device,epoch,step,loss,labels,outputs) 
-                    
+                                        
                     if step == steps:
+                        logStatus('Training',self.device,epoch,step,loss,labels,outputs)
                         break
 
         print("Discriminator training ends")
