@@ -26,11 +26,9 @@ class DeepDreamGAN(DeepDream):
         
         if self.discrimNet is None:
             self.discrimNet = createDiscriminator()
-
-        self.discrimNet.to(self.device)
+            self.discrimNet.to(self.device)
         print("Discriminator Loaded")
 
-        self.trainDiscrimNet()
 
     def trainDiscrimNet(self,steps=50):
         '''
@@ -48,7 +46,6 @@ class DeepDreamGAN(DeepDream):
         #split dataset into train and validate
         datasetTrain,datasetValidate = splitData(dataset,0.75)
 
-        numEpochs = 1
         batch_size = 32
         
         # set parameters for dataloader
@@ -61,27 +58,28 @@ class DeepDreamGAN(DeepDream):
         criterion = nn.BCEWithLogitsLoss()
         optimizer = optim.SGD(self.discrimNet.parameters(),lr=0.005,momentum=0.9)
 
-        for epoch in range(numEpochs):
-                print("Training the discriminator...")
+        print("Discriminator will be updated and initialized to weights that achieve 'decent' accuracy for classifying dream and real images")
+        print("Initializing...")
 
-                for step,data in enumerate(trainLoader):
-                   
-                    # extracts images and labels and moves them to gpu
-                    inputs,labels = extractData(data,self.device)                        
-                    
-                    optimizer.zero_grad()
+        for step,data in enumerate(trainLoader):
+           
+            # extracts images and labels and moves them to gpu
+            inputs,labels = extractData(data,self.device)                        
+            
+            optimizer.zero_grad()
 
-                    outputs = self.discrimNet(inputs)
-                    loss = criterion(outputs,labels)
-                    loss.backward()
-                    optimizer.step()
-                   
-                                        
-                    if step == steps:
-                        logStatus('Training',self.device,epoch,step,loss,labels,outputs)
-                        break
+            outputs = self.discrimNet(inputs)
+            loss = criterion(outputs,labels)
+            loss.backward()
+            optimizer.step()
+           
+                                
+            if step == steps:
+                logStatus('Training',self.device,0,step,loss,labels,outputs)
+                print('##########################')
+                break
 
-        print("Discriminator training ends")
+        print("Initialization ends")
 
 
 

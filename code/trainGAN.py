@@ -12,6 +12,8 @@ def main():
     # create DeepDreamGAN type object
     dreamer = DeepDreamGAN()
 
+    dreamer.trainDiscrimNet() # TRAINS THE DISCRIMINATOR A BIT AT START
+
     dataPath = '/var/tmp/imageData'
     realImagescsv = 'realImages.csv'
     batch_size = 32
@@ -33,7 +35,8 @@ def main():
 
     # tensor of dream images
     dreamImages = torch.zeros([numDreamImages,3,224,224], device=dreamer.device)
-
+    
+    print("GAN training begins")
     for step,data in enumerate(realImageLoader):
     
         print(f'Step : {step}')
@@ -55,9 +58,9 @@ def main():
 
         optimizer.step()
 
-        if step % 30 == 0:
-            savedFileName = 'discriminatorGAN_'+str(step)+'.pth'
-            torch.save(dreamer.discrimNet,savedFileName)
+        if step % 30 == 29:
+            savedFileName = 'discriminatorGANt_'+str(step)+'.pth'
+            torch.save(dreamer.discrimNet.state_dict(),savedFileName)
 
 if __name__ == "__main__":
     main()
