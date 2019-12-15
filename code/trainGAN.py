@@ -12,9 +12,9 @@ def main():
     # create DeepDreamGAN type object
     dreamer = DeepDreamGAN()
 
-    dreamer.trainDiscrimNet() # TRAINS THE DISCRIMINATOR A BIT AT START
+    #dreamer.trainDiscrimNet() # TRAINS THE DISCRIMINATOR A BIT AT START
 
-    dataPath = '/var/tmp/imageData'
+    dataPath = '/proj/ciptmp/on63ilaw/imageData'
     realImagescsv = 'realImages.csv'
     batch_size = 32
     lr = 0.005
@@ -46,20 +46,27 @@ def main():
         
         optimizer.zero_grad()
         # collect gradient from dream images
-        dreamOutputs = dreamer.discrimNet(dreamImages)
-        loss = criterion(dreamOutputs,dreamLabels)
-        loss.backward(retain_graph=True)
+        #dreamOutputs = dreamer.discrimNet(dreamImages)
+        #loss = criterion(dreamOutputs,dreamLabels)
+        #loss.backward(retain_graph=True)
 
         # collect gradient from real images
         realImages,realLabels = extractData(data,dreamer.device)
-        realOutputs = dreamer.discrimNet(realImages)
-        loss = criterion(realOutputs,realLabels)
+        #realOutputs = dreamer.discrimNet(realImages)
+        #loss = criterion(realOutputs,realLabels)
+        #loss.backward()
+        
+        all_images = torch.cat((dreamImages,realImages),0)
+        all_labels = torch.cat((dreamLabels,realLabels),0)
+
+        all_outputs = dreamer.discrimNet(all_images)
+        loss = criterion(all_outputs,all_labels)
         loss.backward()
 
         optimizer.step()
 
         if step % 30 == 29:
-            savedFileName = 'discriminatorGANt_'+str(step)+'.pth'
+            savedFileName = 'discriminatorGAN_'+str(step)+'.pth'
             torch.save(dreamer.discrimNet.state_dict(),savedFileName)
 
 if __name__ == "__main__":
