@@ -83,10 +83,10 @@ class DeepDreamGAN(DeepDream):
 
 
 
-    def __call__(self,im=None,label=0,nLoop=20,nItr1=20,nItr2=10,lr1=0.1,lr2=0.1):
+    def __call__(self,im=None,label=0,num_adversarial_loops=20,gen_nItr=20,dis_nItr=10,gen_lr=0.1,dis_lr=0.1):
         '''
         Functor that creates a tensor from an input tensor after combined effects
-        from the network(parameters nItr1,lr1) and discriminator(parameters nItr2,lr2)
+        from the network(parameters gen_nItr,gen_lr) and discriminator(parameters dis_nItr,dis_lr)
         ,iterating through it nLoop times
         '''
         if im is None:
@@ -102,10 +102,10 @@ class DeepDreamGAN(DeepDream):
 
         print("Dreaming...")
 
-        for _ in range(nLoop):
+        for _ in range(num_adversarial_loops):
             
-            for _ in range(nItr1):
-                optimizer = torch.optim.SGD([im],lr1)
+            for _ in range(gen_nItr):
+                optimizer = torch.optim.SGD([im],gen_lr)
                 out = self.net(im)
                 loss = -out[0,label]
 
@@ -117,9 +117,9 @@ class DeepDreamGAN(DeepDream):
                 im.grad.data.zero_()
 
 
-            for _ in range(nItr2):
+            for _ in range(dis_nItr):
 
-                optimizer = torch.optim.SGD([im],lr2)
+                optimizer = torch.optim.SGD([im],dis_lr)
                 out = self.discrimNet(im)
                 loss = -out  #criterion(out,desiredLabel)
                 
@@ -134,16 +134,16 @@ class DeepDreamGAN(DeepDream):
         '''
         Does the same thing as the functor but choses parameters randomly from a list
         '''
-        nLoop = 20
+        num_adversarial_loops = 20
         random.seed(randomSeed)
-        nItr1 = random.choice(self.nItrs)
-        nItr2 = random.choice(self.nItrs)
-        lr1 = random.choice(self.lrs)
-        lr2 = random.choice(self.lrs)
-        sigma = random.choice(self.sigmas)
+        rand_gen_nItr = np.asscalar(np.random.normal(20,1,1).astype(int))
+        rand_dis_nItr = np.asscalar(np.random.normal(10,1,1).astype(int))
+        rand_gen_lr = np.asscalar(np.random.normal(0.12,0.01,1))
+        rand_dis_lr = np.asscalar(np.random.normal(0.10,0.01,1))
+        rand_sigma = np.asscalar(np.random.normal(0.45,0.05,1))
         label = random.choice(self.labels)
-        self.setGaussianFilter(sigma=sigma)
+        self.setGaussianFilter(sigma=rand_sigma)
 
-        im = self.__call__(im,label=label,nLoop=nLoop,nItr1=nItr1,nItr2=nItr2,lr1=lr1,lr2=lr2)
+        im = self.__call__(im,label=label,num_adversarial_loops=num_adversarial_loops,gen_nItr=rand_gen_nItr,dis_nItr=rand_dis_nItr,gen_lr=rand_gen_lr,dis_lr=rand_dis_lr)
 
         return im

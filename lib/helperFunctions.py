@@ -28,6 +28,8 @@ def createDiscriminator():
     nn.init.normal_(net.classifier[2].weight,0,0.01)
     nn.init.constant_(net.classifier[2].bias,0)
 
+    net.cuda()
+
     return net
 
 def createDataset(data_path,realImagescsv,dreamImagescsv=None):

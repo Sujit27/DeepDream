@@ -114,9 +114,6 @@ class DeepDream():
         self.gaussian_filter = None
         self.ouputImage = None
         # list variables used in randomDream method
-        self.nItrs = [300,400,500,600]
-        self.lrs = [0.08,0.1,0.12,0.14]
-        self.sigmas = [0.4,0.42,0.44,0.46,0.48,0.5]
         self.labels = [i for i in range(1000)]
         # set methods
         self.setDevice()
@@ -141,7 +138,7 @@ class DeepDream():
         self.net.to(self.device)
         print("Network Loaded")
 
-    def __call__(self,im=None,label=0,nItr=500,lr=0.1):
+    def __call__(self,im=None,label=0,nItr=400,lr=0.12):
         """Does activation maximization on a specific label for specified iterations,
            acts like a functor, and returns an image tensor
         """
@@ -178,13 +175,13 @@ class DeepDream():
         """Does activation maximization on a random label for randomly chosen learning rate,number of iterations and gaussian filter size, and returns an image tensor
         """
         random.seed(randomSeed)
-        nItr = random.choice(self.nItrs)
-        lr = random.choice(self.lrs)
-        sigma = random.choice(self.sigmas)
-        label = random.choice(self.labels)
-        self.setGaussianFilter(sigma=sigma)
+        rand_nItr = np.asscalar(np.random.normal(500,40,1).astype(int))
+        rand_lr = np.asscalar(np.random.normal(0.12,0.01,1))
+        rand_sigma = np.asscalar(np.random.normal(0.45,0.05,1))
+        rand_label = random.choice(self.labels)
+        self.setGaussianFilter(sigma=rand_sigma)
 
-        im = self.__call__(im,label=label,nItr=nItr,lr=lr)
+        im = self.__call__(im,label=rand_label,nItr=rand_nItr,lr=rand_lr)
 
         return im
 
@@ -210,7 +207,7 @@ class DeepDream():
 
         return preprocess(inputImage)
 
-    def setGaussianFilter(self,kernelSize=3,sigma=0.5):
+    def setGaussianFilter(self,kernelSize=3,sigma=0.45):
 
         # Create a x, y coordinate grid of shape (kernelSize, kernelSize, 2)
         x_cord = torch.arange(kernelSize)
