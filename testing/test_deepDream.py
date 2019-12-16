@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../lib/')
 import unittest
-from deepDream import *
+from deepDreamGAN import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -89,3 +89,56 @@ class TestVgg(unittest.TestCase):
 
         # check if the label prediction values are same
         np.testing.assert_almost_equal(ourLabelPredVals,torchModelLabelPredVals,4)
+
+class TestDiscrimNet(unittest.TestCase):
+    '''
+    To test the discriminator in DeepDreamGAN type object
+    '''
+    def test_discrimNetTraining(self):
+        '''
+        Test whether after training, the discriminator network
+        of the DeepDreamGAN type object becomes better at  detecting
+        a dream image tensor 
+        '''
+        # create a basic dreamer and dreamerGAN whose disciminator is not trained
+        dreamer_plain = DeepDream()
+        dreamerGAN_not_trained = DeepDreamGAN()
+        
+        # create a dreamerGAN whose discrkminator is already trained
+        discrimNet = createDiscriminator()
+        discrimNet.load_state_dict(torch.load('../discriminatorGAN_539.pth'))
+        dreamerGAN_trained = DeepDreamGAN(discrimNet=discrimNet)
+
+        labels = [71,130,407,430] #random labels to check
+        
+        #lists for activations of the dream image tensors input into the discrimNets
+        activations_not_trained = []
+        activations_trained = []
+
+        for label in labels:
+            im = dreamer_plain(label=label)
+            x = dreamerGAN_not_trained.discrimNet(im)
+            y = dreamerGAN_trained.discrimNet(im)
+
+            activations_not_trained.append(x.cpu())
+            activations_trained.append(y.cpu())
+        
+        # assert that activations for trained should be less than for untrained discriminator
+        np.testing.assert_array_less(activations_trained,activations_not_trained)
+
+        #lists for activations of plain dream and adverserially updated dream
+        activations_plain_dream = []
+        activations_GAN_dream = []
+        for label in labels:
+            im = dreamer_plain(label=label)
+            x = dreamerGAN_trained.discrimNet(im)
+
+            # do one adversarial loop on the im input hence making the tensor more 'realistic'
+            im2 = dreamerGAN_trained(im=im,label=label)
+            y = dreamerGAN_trained.discrimNet(im2)
+
+            activations_plain_dream.append(x.cpu())
+            activations_GAN_dream.append(y.cpu())
+
+        #assert that plain dream activations should be less than GAN updated dream
+        np.testing.assert_array_less(activations_plain_dream,activations_GAN_dream)
