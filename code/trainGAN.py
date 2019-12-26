@@ -7,23 +7,40 @@ from deepDreamGAN import *
 
 #Description : To train a DeepDreamGAN object and save it
 
+PREVIOUS_FILE = 'discriminatorGAN_320.pth'
+
+def load_discriminator(file_path):
+    if os.path.exists(file_path):
+        discrimNet = createDiscriminator()
+        discrimNet.load_state_dict(torch.load(file_path))
+    else:
+        discrimNet = None
+
+    return discrimNet
+
 def main():
-    
+    # load previous discriminator
+    discrimNet = load_discriminator(PREVIOUS_FILE)
+    if discrimNet is not None:
+        previous_step = int(''.join(filter(str.isdigit,PREVIOUS_FILE)))
+    else:
+        previous_step = 0
+
     # create DeepDreamGAN type object
-    dreamer = DeepDreamGAN()
+    dreamer = DeepDreamGAN(discrimNet=discrimNet)
 
     #dreamer.trainDiscrimNet() # TRAINS THE DISCRIMINATOR A BIT AT START
 
     dataPath = '/proj/ciptmp/on63ilaw/imageData'
     realImagescsv = 'realImages.csv'
-    batch_size = 8
+    batch_size = 16
     lr = 0.005
     
     # loss and optimizer
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.SGD(dreamer.discrimNet.parameters(),lr=lr,momentum=0.9)
 
-    numDreamImages = 4
+    numDreamImages = 8
     numRealImages = batch_size - numDreamImages
     
     realImageDataset = createDataset(dataPath,realImagescsv)
@@ -39,7 +56,7 @@ def main():
         # tensor of dream images
         dreamImages = torch.zeros([numDreamImages,3,224,224], device=dreamer.device)
 
-        print(f'Step : {step}')
+        print(f'Step : {previous_step+step+1}')
         # generate the dream images for this batch
         for i in range(numDreamImages):
             dreamImages[i,:,:,:] = dreamer.randomDream()
@@ -56,8 +73,9 @@ def main():
         loss.backward()
         optimizer.step()
 
-        if step % 30 == 29:
-            savedFileName = 'discriminatorGAN_'+str(step)+'.pth'
+
+        if step % 40 == 39:
+            savedFileName = 'discriminatorGAN_'+str(previous_step+step+1)+'.pth'
             torch.save(dreamer.discrimNet.state_dict(),savedFileName)
 
 if __name__ == "__main__":
